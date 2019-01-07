@@ -1,67 +1,17 @@
-import 'isomorphic-fetch';
-import Link from 'next/link';
-
 export default class extends React.Component {
 
-  static async getInitialProps({ query }) {
+  static async getInitialProps({ query }){
     let idChannel = query.id;
 
-    let [ reqChannel, reqAudio, reqSeries ] = await Promise.all([
-      fetch(`https://api.audioboom.com/channels/${idChannel}`),
-      fetch(`https://api.audioboom.com/channels/${idChannel}/audio_clips`),
-      fetch(`https://api.audioboom.com/channels/${idChannel}/child_channels`)
-    ])
-
-    let dataChannel = await reqChannel.json();
-    let channel = dataChannel.body.channel;
-
-    let dataAudios = await reqAudio.json();
-    let audioClips = dataAudios.body.audio_clips;
-
-    let dataSeries = await reqSeries.json();
-    let series = dataSeries.body.channels;
-
-    return { channel, audioClips, series }
+    let req = await fetch('https://api.audioboom.com/audio_clips/${idChannel}.mp3');
+    let { body: audio_clip } = await req.json();
+    return { audio_clip }
   }
 
   render() {
-    const { channel, audioClips, series } = this.props;
-
     return (
       <div>
         <header>Podcasts</header>
-
-        <div className="banner" style={{ backgroundImage: `url(${channel.urls.banner_image.original})` }} />
-
-        <h1>{channel.title}</h1>
-
-        { series.length > 0 &&
-          <div>
-            <h2>Series</h2>
-            <div className="channels">
-              { series.map((serie) => (
-                <Link href={`/channel?id=${ serie.id }`} prefetch key={serie.id}>
-                  <a className="channel">
-                    <img src={ serie.urls.logo_image.original } alt=""/>
-                    <h2>{ serie.title }</h2>
-                  </a>
-                </Link>
-              ))}
-            </div>
-          </div>
-        }
-
-        <h2>Ultimos Podcasts</h2>
-        { audioClips.map((clip) => (
-          <Link href={`/podcast?id=${clip.id}`} prefetch key={clip.id}>
-            <a className='podcast'>
-              <h3>{ clip.title }</h3>
-              <div className='meta'>
-                { Math.ceil(clip.duration / 60) } minutes
-              </div>
-            </a>
-          </Link>
-        ))}
 
         <style jsx>{`
           header {
@@ -136,7 +86,6 @@ export default class extends React.Component {
           }
         `}</style>
       </div>
-
     )
   }
 }
