@@ -1,34 +1,49 @@
 import 'isomorphic-fetch';
-import Link from 'next/link';
 import Layout from '../components/Layout';
 import ChannelGrid from '../components/ChannelGrid';
 import PodcastLis from '../components/PodcastList';
+import Error from './_error';
 
 export default class extends React.Component {
 
-  static async getInitialProps({ query }) {
+  static async getInitialProps({ query, res }) {
     let idChannel = query.id;
 
-    let [ reqChannel, reqAudio, reqSeries ] = await Promise.all([
-      fetch(`https://api.audioboom.com/channels/${idChannel}`),
-      fetch(`https://api.audioboom.com/channels/${idChannel}/audio_clips`),
-      fetch(`https://api.audioboom.com/channels/${idChannel}/child_channels`)
-    ])
+    try {
+      let [ reqChannel, reqAudio, reqSeries ] = await Promise.all([
+        fetch(`https://api.audioboom.com/channels/${idChannel}`),
+        fetch(`https://api.audioboom.com/channels/${idChannel}/audio_clips`),
+        fetch(`https://api.audioboom.com/channels/${idChannel}/child_channels`)
+      ])
 
-    let dataChannel = await reqChannel.json();
-    let channel = dataChannel.body.channel;
+      // .status fetch
+      if (reqChannel.status >= 400) {
+        res.statusCode = reqChannel.status;
+        return { channel: null, audioClips: null, series:null, statusCode: reqChannel.status }
+      }
 
-    let dataAudios = await reqAudio.json();
-    let audioClips = dataAudios.body.audio_clips;
+      let dataChannel = await reqChannel.json();
+      let channel = dataChannel.body.channel;
+  
+      let dataAudios = await reqAudio.json();
+      let audioClips = dataAudios.body.audio_clips;
+  
+      let dataSeries = await reqSeries.json();
+      let series = dataSeries.body.channels;
 
-    let dataSeries = await reqSeries.json();
-    let series = dataSeries.body.channels;
-
-    return { channel, audioClips, series }
+      return { channel, audioClips, series, statusCode: 200 }
+    } catch(e) {
+      res.statusCode = 503;
+      return { channel: null, audioClips: null, series:null, statusCode: 503 }
+    }
   }
 
   render() {
-    const { channel, audioClips, series } = this.props;
+    const { channel, audioClips, series, statusCode } = this.props;
+
+    if (statusCode !== 200) {
+      return <Error statusCode={ statusCode } />
+    }
 
     return (
       <div>

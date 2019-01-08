@@ -1,20 +1,36 @@
 import 'isomorphic-fetch';
 import Link from 'next/link';
 import Layout from '../components/Layout';
+import Error from './_error';
 
 export default class extends React.Component {
 
-  static async getInitialProps({ query }){
+  static async getInitialProps({ query, res }){
     let idChannel = query.id;
 
-    let reqAudio = await fetch(`https://api.audioboom.com/audio_clips/${idChannel}.mp3`);
-    let dataAudio = await reqAudio.json();
-    let clip = dataAudio.body.audio_clip;
-    return { clip }
+    try {
+      let reqAudio = await fetch(`https://api.audioboom.com/audio_clips/${idChannel}.mp3`);
+      
+      if (reqAudio.status >= 400) {
+        res.reqAudio.status = reqAudio.status;
+        return { reqAudio: null, statusCode: reqAudio.status }
+      }
+      
+      let dataAudio = await reqAudio.json();
+      let clip = dataAudio.body.audio_clip;
+      return { clip, statusCode: 200 }
+    } catch(e) {
+      res.statusCode = 503;
+      return { clip: null, statusCode: 503 }
+    }
   }
 
   render() {
-    const { clip } = this.props;
+    const { clip, statusCode } = this.props;
+
+    if (statusCode !== 200) {
+      return <Error statusCode={ statusCode } />
+    }
 
     return (
       <Layout title={ clip.title }>
