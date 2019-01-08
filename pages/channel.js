@@ -29,7 +29,11 @@ export default class extends React.Component {
 
     return (
       <div>
-        <header>Podcasts</header>
+        <header>
+          <Link href="/">
+            <a>Podcasts</a>
+          </Link>
+        </header>
 
         <div className="banner" style={{ backgroundImage: `url(${channel.urls.banner_image.original})` }} />
 
@@ -69,6 +73,11 @@ export default class extends React.Component {
             background: #8756ca;
             padding: 15px;
             text-align: center;
+          }
+
+          header a {
+            color: #fff;
+            text-decoration: none;
           }
 
           .banner {

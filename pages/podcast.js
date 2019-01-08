@@ -1,81 +1,104 @@
+import 'isomorphic-fetch';
+import Link from 'next/link';
+
 export default class extends React.Component {
 
   static async getInitialProps({ query }){
     let idChannel = query.id;
 
-    let req = await fetch('https://api.audioboom.com/audio_clips/${idChannel}.mp3');
-    let { body: audio_clip } = await req.json();
-    return { audio_clip }
+    let reqAudio = await fetch(`https://api.audioboom.com/audio_clips/${idChannel}.mp3`);
+    let dataAudio = await reqAudio.json();
+    let clip = dataAudio.body.audio_clip;
+    return { clip }
   }
 
   render() {
+    const { clip } = this.props;
+
     return (
       <div>
         <header>Podcasts</header>
 
+        <div className="modal">
+          <div className="clip">
+            <nav>
+              <Link href={`/channel?id=${clip.channel.id}`}>
+                <a className='close'>&lt; Volver</a>
+              </Link>
+            </nav>
+
+            <picture>
+              <div style={{ backgroundImage: `url(${clip.urls.image || clip.channel.urls.logo_image.original})` }} />
+            </picture>
+
+            <div className='player'>
+              <h3>{ clip.title }</h3>
+              <h6>{ clip.channel.title }</h6>
+              <audio controls autoPlay={true}>
+                <source src={clip.urls.high_mp3} type='audio/mpeg' />
+              </audio>
+            </div>
+          </div>
+        </div>
+
         <style jsx>{`
-          header {
-            color: #fff;
-            background: #8756ca;
+          nav {
+            background: none;
+          }
+          nav a {
+            display: inline-block;
             padding: 15px;
-            text-align: center;
-          }
-
-          .banner {
-            width: 100%;
-            padding-bottom: 25%;
-            background-position: 50% 50%;
-            background-size: cover;
-            background-color: #aaa;
-          }
-
-          .channels {
-            display: grid;
-            grid-gap: 15px;
-            padding: 15px;
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-          }
-          a.channel {
-            display: block;
-            margin-bottom: 0.5em;
-            color: #333;
-            text-decoration: none;
-          }
-          .channel img {
-            border-radius: 3px;
-            box-shadow: 0px 2px 6px rgba(0,0,0,0.15);
-            width: 100%;
-          }
-          h1 {
-            font-weight: 600;
-            padding: 15px;
-          }
-          h2 {
-            padding: 5px;
-            font-size: 0.9em;
-            font-weight: 600;
-            margin: 0;
-            text-align: center;
-          }
-
-          .podcast {
-            display: block;
-            text-decoration: none;
-            color: #333;
-            padding: 15px;
-            border-bottom: 1px solid rgba(0,0,0,0.2);
+            color: white;
             cursor: pointer;
+            text-decoration: none;
           }
-          .podcast:hover {
-            color: #000;
+          .clip {
+            display: flex;
+            height: 100%;
+            flex-direction: column;
+            background: #8756ca;
+            color: white;
           }
-          .podcast h3 {
+          picture {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 1 1;
+            flex-direction: column;
+            width: auto;
+            padding: 10%;
+          }
+          picture div {
+            width: 100%;
+            height: 100%;
+            background-position: 50% 50%;
+            background-size: contain;
+            background-repeat: no-repeat;
+          }
+          .player {
+            padding: 30px;
+            background: rgba(0,0,0,0.3);
+            text-align: center;
+          }
+          h3 {
             margin: 0;
           }
-          .podcast .meta {
-            color: #666;
-            margin-top: 0.5em;
-            font-size: 0.8em;
+          h6 {
+            margin: 0;
+            margin-top: 1em;
+          }
+          audio {
+            margin-top: 2em;
+            width: 100%;
+          }
+  
+          .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 99999;
           }
         `}</style>
 
